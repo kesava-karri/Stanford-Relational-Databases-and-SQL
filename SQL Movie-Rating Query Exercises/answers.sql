@@ -1,4 +1,69 @@
+-- Find the difference between the average rating of movies released before 1980 and the average rating of movies released after 1980. (Make sure to calculate the average rating for each movie, then the average of those averages for movies before 1980 and movies after. Don't just calculate the overall average rating before and after 1980.)
+-- The query I came up with
+select abs(
+  (select avg(avgStars)
+	from (select year, avg(stars) as avgStars from Movie natural join Rating
+	group by title) T
+	where T.year > 1980) 
+	- 
+	(select avg(avgStars)
+	from (select year, avg(stars) as avgStars from Movie natural join Rating
+	group by title) T
+	where T.year < 1980)
+);
 
+-- Simplified & Optimized with Common Table Expression (CTE)
+with T as select avg(avgBefore)-avg(avgAfter)
+from(
+select avg(stars) avgBefore 
+from Movie natural join Rating
+where year < 1980
+group by mID
+),
+(select avg(stars) avgAfter 
+from Movie natural join Rating
+where year > 1980
+group by mID);(
+	select year, avg(stars) as avgStars 
+	from Movie natural join Rating
+	group by mID
+) 
+
+select abs (
+	(select avg(avgStars) from T where year < 1980) - 
+	(select avg(avgStars) from T where year > 1980)
+);
+
+-- Actual [varies in 10^-10 decimal value]
+-- It differed 'cause the way rounding works in sql
+
+--------------------------------------------------------------------------------
+-- For each movie, return the title and the 'rating spread', that is, the difference between highest and lowest ratings given to that movie. Sort by rating spread from highest to lowest, then by movie title.
+select title, max(stars) - min(stars) as spread from Movie natural join Rating
+group by mID
+order by spread desc, title;
+--------------------------------------------------------------------------------
+-- For each movie that has at least one rating, find the highest number of stars that movie received. 
+-- Return the movie title and number of stars. Sort by movie title.
+
+-- Initial Thoughts: 
+-- 2 instances of Ratings, based on mID if it has more than one review then collect those
+-- Use these to compare the max stars for that particular Movie
+-- Return title & stars, sort by title 
+
+select  title, stars
+from Movie M inner join Rating R using (mID)
+where M.mID in (select mID from Rating R
+group by R.mID
+having max(stars))
+group by M.mID having max(stars)
+order by title ;
+
+-- Better version:
+select title, stars from Movie natural join Rating
+group by mID 
+having max(stars)
+order by title;
 --------------------------------------------------------------------------------
 -- For all cases where the same reviewer rated the same movie twice and gave it a higher rating the second time, return the reviewer's name and the title of the movie.
 
