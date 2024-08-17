@@ -13,21 +13,11 @@ select abs(
 );
 
 -- Simplified & Optimized with Common Table Expression (CTE)
-with T as select avg(avgBefore)-avg(avgAfter)
-from(
-select avg(stars) avgBefore 
-from Movie natural join Rating
-where year < 1980
-group by mID
-),
-(select avg(stars) avgAfter 
-from Movie natural join Rating
-where year > 1980
-group by mID);(
-	select year, avg(stars) as avgStars 
-	from Movie natural join Rating
-	group by mID
-) 
+with T as (
+  select year, avg(stars) avgStars 
+  from Movie natural join Rating
+  group by mID
+)
 
 select abs (
 	(select avg(avgStars) from T where year < 1980) - 
