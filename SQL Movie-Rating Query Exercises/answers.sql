@@ -1,3 +1,124 @@
+-- For each director, return the director's name together with the title(s) of the movie(s) they directed that received the highest rating among all of their movies, and the value of that rating. Ignore movies whose director is NULL.
+with T as (
+	select *, max(stars) as maxStars from Rating natural join Movie
+	group by director
+	having max(stars)
+)
+
+select director, title, maxStars from T
+where director is not NULL
+--------------------------------------------------------------------------------
+-- Find the movie(s) with the lowest average rating. Return the movie title(s) and average rating.
+with T as (
+	select *, avg(stars) as avgStars from Rating natural join Movie
+	group by mID
+)
+
+select title, avgStars from T 
+
+where avgStars in (select min(avgStars) from T)
+--------------------------------------------------------------------------------
+-- Find the movie(s) with the highest average rating. Return the movie title(s) and average rating. (Hint: This query is more difficult to write in SQLite than other systems; you might think of it as finding the highest average rating and then choosing the movie(s) with that average rating.)
+select M.title, max(T.avgStars) as avgRating
+from Movie M join (select *, avg(stars) as avgStars from Rating
+group by mID) T on M.mID = T.mID
+
+--------------------------------------------------------------------------------
+-- Some directors directed more than one movie. For all such directors, return the titles of all movies directed by them, along with the director name. Sort by director name, then movie title. (As an extra challenge, try writing the query both with and without COUNT.)
+-- self join version:
+select distinct M1.title, M1.director from Movie M1 join Movie M2 on M1.director = M2.director
+where M1.mID <> M2.mID
+order by M1.director, M1.title;
+-- Extra challenge:
+-- with count
+select title, director
+from Movie
+where director in (select director from Movie
+group by director
+having count(mID) > 1)
+order by director, title
+-- without count
+select M1.title, M1.director from Movie M1, Movie M2
+where M1.director = M2.director and M1.title <> M2.title and M1.director is not NULL
+order by M1.director, M1.title
+
+--------------------------------------------------------------------------------
+-- Find the names of all reviewers who have contributed three or more ratings. (As an extra challenge, try writing the query without HAVING or without COUNT.)
+-- One way:
+  select rID, name
+	from Rating natural join Reviewer
+	group by rID
+	having count(rID) >= 3
+-- Alternate approach (self-join & natural join)(Extra challenge):
+with T as (
+  select * from Rating natural join Reviewer
+)
+
+select * 
+from T T1 join T T2 join T T3 on T1.rID = T2.rID and T2.rID = T3.rID and T1.rID = T3.rID
+where (T1.mID < T2.mID or T1.ratingDate < T2.ratingDate)
+  and (T2.mID < T3.mID or T2.ratingDate < T3.ratingDate)
+  and (T1.mID < T3.mID or T1.ratingDate < T3.ratingDate)
+
+--------------------------------------------------------------------------------
+-- List movie titles and average ratings, from highest-rated to lowest-rated. If two or more movies have the same average rating, list them in alphabetical order.
+select title, avg(stars) as avgStars from Movie natural join Rating
+group by mID
+order by avgStars desc;
+
+--------------------------------------------------------------------------------
+-- For each rating that is the lowest (fewest stars) currently in the database, return the reviewer name, movie title, and number of stars.
+with T as (
+	select min(stars) as minStars from Rating
+)
+
+select name, title, stars from T, Rating natural join Reviewer Re natural join Movie M
+where stars = T.minStars;
+
+--------------------------------------------------------------------------------
+-- For all pairs of reviewers such that both reviewers gave a rating to the same movie, return the names of both reviewers. Eliminate duplicates, don't pair reviewers with themselves, and include each pair only once. For each pair, return the names in the pair in alphabetical order.
+-- Tags: Use of multiple CTEs
+with 
+	T1 as (
+		select distinct rID, mID, name from Rating R natural join Reviewer Re
+		),
+	T2 as (
+		select R1.rID as rID1, R2.rID as rID2, R2.mID, R1.name as name1, R2.name as name2 from T1 as R1, T1 as R2
+		where R1.mID = R2.mID
+	)
+
+select distinct name1, name2 from T2
+where name1 < name2
+order by name1, name2;
+
+--------------------------------------------------------------------------------
+-- Find the titles of all movies not reviewed by Chris Jackson.
+select title
+from Movie
+where mID not in (select mID from Reviewer natural join Rating natural join Movie
+where name = "Chris Jackson");
+
+--------------------------------------------------------------------------------
+-- Return all reviewer names and movie names together in a single list, alphabetized. (Sorting by the first name of the reviewer and first word in the title is fine; no need for special processing on last names or removing "The".)
+with T as (
+	select name, title from Reviewer natural join Movie
+)
+
+select name from T
+union
+select title from T;
+
+--------------------------------------------------------------------------------
+-- For any rating where the reviewer is the same as the director of the movie, return the reviewer name, movie title, and number of stars.
+select name, title, stars from Rating natural join Reviewer natural join Movie
+where name = director;
+
+--------------------------------------------------------------------------------
+-- Find the names of all reviewers who rated Gone with the Wind.
+select distinct name from Rating natural join Reviewer natural join Movie
+where title = "Gone with the Wind";
+
+--------------------------------------------------------------------------------
 -- Find the difference between the average rating of movies released before 1980 and the average rating of movies released after 1980. (Make sure to calculate the average rating for each movie, then the average of those averages for movies before 1980 and movies after. Don't just calculate the overall average rating before and after 1980.)
 -- The query I came up with
 select abs(
