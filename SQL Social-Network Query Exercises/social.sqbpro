@@ -1,16 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/Users/keshavk/Desktop/Projects/Databases/Stanford Databases YT - SQL/Stanford-Relational-Databases-and-SQL/SQL Social-Network Query Exercises/social.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure query browser pragmas" current="1"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="864"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,6:mainFriend"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1">with T as (
-	select L.ID1, H1.name as name1, H1.grade as grade1, L.ID2, H2.name as name2, H2.grade as grade2
-	from Likes L
-	join Highschooler H1 on L.ID1 = H1.ID
-	join Highschooler H2 on L.ID2 = H2.ID
-)
-
--- select * 
--- from (select T.ID1 as M1, T.ID2 as M2 from T, Friend F
--- where T.ID1 = F.ID1 and T.ID2 = F.ID2), T T1
--- where M1 &lt;&gt; T1.ID1 and M2 &lt;&gt; T1.ID2
--- order by name1, name2
-
-select T.ID1 as M1, T.ID2 as M2 from T, Friend F
-where T.ID1 = F.ID1 and T.ID2 = F.ID2 and M1 &lt; M2
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="/Users/keshavk/Desktop/Projects/Databases/Stanford Databases YT - SQL/Stanford-Relational-Databases-and-SQL/SQL Social-Network Query Exercises/social.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="3"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="285"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,6:mainFriend"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Friend" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_"><sort/><column_widths><column index="1" value="36"/><column index="2" value="36"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1">select H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
+from Likes L1
+join Likes L2 on L1.ID2 = L2.ID1
+join Highschooler H1 on H1.ID = L1.ID1
+join Highschooler H2 on H2.ID = L1.ID2
+join Highschooler H3 on H3.ID = L2.ID2
+where L1.ID1 &lt;&gt; L2.ID2
 </sql><current_tab id="0"/></tab_sql></sqlb_project>

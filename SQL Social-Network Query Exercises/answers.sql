@@ -1,4 +1,86 @@
 --------------------------------------------------------------------------------
+-- Find the name and grade of the student(s) with the greatest number of friends.
+with FriendwNames as (
+	select H1.ID as ID1, H1.name as name1, H1.grade as grade1, H2.ID as ID2, H2.name as name2
+	from Friend F
+	join Highschooler H1 on F.ID1 = H1.ID
+	join Highschooler H2 on F.ID2 = H2.ID
+)
+
+select name1, grade1
+from FriendwNames
+group by ID1
+having count(ID2) = (select max(friendsCount)
+											from (select count(ID2) as friendsCount from FriendwNames group by ID1)
+                    )
+											
+
+
+--------------------------------------------------------------------------------
+-- Find the number of students who are either friends with Cassandra or are friends of friends of Cassandra. Do not count Cassandra, even though technically she is a friend of a friend.
+with FriendwNames as (
+	select H1.ID as ID1, H1.name as name1, H2.ID as ID2, H2.name as name2
+	from Friend F
+	join Highschooler H1 on F.ID1 = H1.ID
+	join Highschooler H2 on F.ID2 = H2.ID
+),
+FriendsOfFriends as (
+		select *
+		from FriendwNames FN
+		where FN.ID1 in (select ID2 from FriendwNames FN where name1 = "Cassandra")
+		and name2 <> "Cassandra"
+)
+
+select count(*)
+from (
+	select ID1 from FriendsOfFriends
+	union
+	select ID2 from FriendsOfFriends
+)
+
+--------------------------------------------------------------------------------
+-- What is the average number of friends per student? (Your result should be just one number.)
+select avg(NumberOfFriends)
+from (select count(ID2) as NumberOfFriends from Friend F
+group by F.ID1)
+
+
+--------------------------------------------------------------------------------
+-- Find those students for whom all of their friends are in different grades from themselves. Return the students' names and grades.
+with T as (
+	select H1ID
+	from SameGradeFriend
+	union
+	select H2ID
+	from SameGradeFriend
+),
+SameGradeFriend as (
+	select H1.ID as H1ID, H2.ID as H2ID
+	from Friend F1
+	join Highschooler H1 on H1.ID = F1.ID1
+	join Highschooler H2 on H2.ID = F1.ID2
+	group by ID1
+	having H1.grade = H2.grade
+)
+
+select name, grade
+from Highschooler H
+where H.ID not in T
+
+
+--------------------------------------------------------------------------------
+-- Social-Network Query Exercises Extras [Follows stack format]
+-- For every situation where student A likes student B, but student B likes a different student C, return the names and grades of A, B, and C.
+
+select H1.name, H1.grade, H2.name, H2.grade, H3.name, H3.grade
+from Likes L1
+join Likes L2 on L1.ID2 = L2.ID1
+join Highschooler H1 on H1.ID = L1.ID1
+join Highschooler H2 on H2.ID = L1.ID2
+join Highschooler H3 on H3.ID = L2.ID2
+where L1.ID1 <> L2.ID2
+
+--------------------------------------------------------------------------------
 -- Find the name and grade of all students who are liked by more than one other student.
 select name, grade
 from (
