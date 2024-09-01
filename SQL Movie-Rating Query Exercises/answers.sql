@@ -1,3 +1,33 @@
+--------------------------------------------------------------------------------
+-- Remove all ratings where the movie's year is before 1970 or after 2000, and the rating is fewer than 4 stars.
+Delete from Rating
+where exists(
+	select 1
+	from Movie M
+	where M.mID = Rating.mID
+	and (year < 1970 or year > 2000) 
+	and stars < 4
+)
+
+--------------------------------------------------------------------------------
+-- For all movies that have an average rating of 4 stars or higher, add 25 to the release year.
+with T as (
+	select mID from Rating
+	group by mID
+	having avg(stars) >= 4
+)
+
+Update Movie
+Set year = year+25
+where mID in T
+
+--------------------------------------------------------------------------------
+-- SQL Movie-Rating Modification Exercises (Answers follow stack format)
+-- Using the db "rating_modified.db" for these queries as it modifies the database
+-- Add the reviewer Roger Ebert to your database, with an rID of 209.
+insert into Reviewer values(209, 'Roger Ebert')
+
+--------------------------------------------------------------------------------
 -- For each director, return the director's name together with the title(s) of the movie(s) they directed that received the highest rating among all of their movies, and the value of that rating. Ignore movies whose director is NULL.
 with T as (
 	select *, max(stars) as maxStars from Rating natural join Movie
