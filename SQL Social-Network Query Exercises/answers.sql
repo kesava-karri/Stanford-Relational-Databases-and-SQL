@@ -1,4 +1,39 @@
 --------------------------------------------------------------------------------
+-- For all cases where A is friends with B, and B is friends with C, add a new friendship for the pair A and C. Do not add duplicate friendships, friendships that already exist, or friendships with oneself. (This one is a bit challenging; congratulations if you get it right.)
+Insert Into Friend 
+select distinct F1.ID1, F2.ID2
+from Friend F1
+join Friend F2 on F1.ID2 = F2.ID1
+where F1.ID1 <> F2.ID2
+	and not exists (
+		select 1
+		from Friend F3
+		where F3.ID1 = F1.ID1 and F3.ID2 = F2.ID2
+	)
+
+--------------------------------------------------------------------------------
+-- If two students A and B are friends, and A likes B but not vice-versa, remove the Likes tuple.
+Delete from Likes
+where not exists (
+	select 1
+	from Likes L2
+	where Likes.ID2 = L2.ID1 and Likes.ID1 = L2.ID2
+)
+and exists (
+  select 1
+  from Friend F
+  where F.ID1 = Likes.ID1 and F.ID2 = Likes.ID2
+)
+
+
+--------------------------------------------------------------------------------
+-- SQL Movie-Rating Modification Exercises (Answers follow stack format)
+-- Using the db "social_modified.db" for these queries as it modifies the database
+-- It's time for the seniors to graduate. Remove all 12th graders from Highschooler.
+Delete from Highschooler
+where grade = 12
+
+--------------------------------------------------------------------------------
 -- Find the name and grade of the student(s) with the greatest number of friends.
 with FriendwNames as (
 	select H1.ID as ID1, H1.name as name1, H1.grade as grade1, H2.ID as ID2, H2.name as name2
@@ -10,9 +45,12 @@ with FriendwNames as (
 select name1, grade1
 from FriendwNames
 group by ID1
-having count(ID2) = (select max(friendsCount)
-											from (select count(ID2) as friendsCount from FriendwNames group by ID1)
-                    )
+having count(ID2) = (
+  select max(friendsCount)
+  from (
+    select count(ID2) as friendsCount from FriendwNames group by ID1
+  )
+)
 											
 
 
